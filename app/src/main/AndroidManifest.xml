@@ -29,7 +29,7 @@
             android:theme="@android:style/Theme.Holo.Dialog" />
 
 
-
+        <service android:name=".BluetoothChatService" />
     </application>
 
 </manifest>

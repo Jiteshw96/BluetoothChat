@@ -16,15 +16,21 @@
 
 package com.atos.bledata;
 
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +43,7 @@ import java.util.UUID;
  * incoming connections, a thread for connecting with a device, and a
  * thread for performing data transmissions when connected.
  */
-public class BluetoothChatService {
+public class BluetoothChatService extends Service {
     // Debugging
     private static final String TAG = "BluetoothChatService";
 
@@ -130,7 +136,6 @@ public class BluetoothChatService {
         // Update UI title
         updateUserInterfaceTitle();
     }
-
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
      *
@@ -292,6 +297,53 @@ public class BluetoothChatService {
         // Start the service over to restart listening mode
         BluetoothChatService.this.start();
     }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+    private final IBinder mBinder = new BluetoothChatService.LocalBinder();
+
+    public class LocalBinder extends Binder {
+        BluetoothChatService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return BluetoothChatService.this;
+        }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "start");
+
+        // Cancel any thread attempting to make a connection
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+
+        // Cancel any thread currently running a connection
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+            mConnectedThread = null;
+        }
+
+        // Start the thread to listen on a BluetoothServerSocket
+        if (mSecureAcceptThread == null) {
+            mSecureAcceptThread = new AcceptThread(true);
+            mSecureAcceptThread.start();
+        }
+        if (mInsecureAcceptThread == null) {
+            mInsecureAcceptThread = new AcceptThread(false);
+            mInsecureAcceptThread.start();
+        }
+        // Update UI title
+        updateUserInterfaceTitle();
+
+        return START_STICKY;
+
+    }
+
 
     /**
      * This thread runs while listening for incoming connections. It behaves

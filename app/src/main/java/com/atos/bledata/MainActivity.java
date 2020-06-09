@@ -130,14 +130,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mChatService != null) {
-            mChatService.stop();
-        }
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
@@ -148,14 +140,24 @@ public class MainActivity extends AppCompatActivity {
             // Only if the state is STATE_NONE, do we know that we haven't started already
             if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
                 // Start the Bluetooth chat services
-                mChatService.start();
+              // mChatService.start();
+               Intent serviceIntent = new Intent(BluetoothChatService.class.getName());
+               startService(serviceIntent);
+
             }
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mChatService != null) {
+            //mChatService.stop();
+           Intent serviceIntent = new Intent(BluetoothChatService.class.getName());
+            stopService(serviceIntent);
 
-
-
+        }
+    }
 
 
     /**
@@ -164,13 +166,13 @@ public class MainActivity extends AppCompatActivity {
     private void setupChat() {
         Log.d("TAG", "setupChat()");
 
-        // Initialize the array adapter for the conversation thread
-      //  mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
+        //Initialize the array adapter for the conversation thread
+      //mConversationArrayAdapter = new ArrayAdapter<String>(this, R.layout.message);
 
-      //  mConversationView.setAdapter(mConversationArrayAdapter);
+      //mConversationView.setAdapter(mConversationArrayAdapter);
 
-        // Initialize the compose field with a listener for the return key
-      //  mOutEditText.setOnEditorActionListener(mWriteListener);
+        //Initialize the compose field with a listener for the return key
+      //mOutEditText.setOnEditorActionListener(mWriteListener);
 
         // Initialize the send button with a listener that for click events
         mSendButton.setOnClickListener(new View.OnClickListener() {
